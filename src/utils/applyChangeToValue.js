@@ -58,18 +58,26 @@ const applyChangeToValue = (
     if (controlPlainTextValue !== plainTextValue) {
       // some auto-correction is going on
 
-      // find start of diff
+      // Find the start of the changed region by comparing oldPlainTextValue with plainTextValue
       spliceStart = 0
-      while (plainTextValue[spliceStart] === controlPlainTextValue[spliceStart])
+      while (spliceStart < oldPlainTextValue.length && spliceStart < plainTextValue.length &&
+             oldPlainTextValue[spliceStart] === plainTextValue[spliceStart]) {
         spliceStart++
+      }
 
-      // extract auto-corrected insertion
-      insert = plainTextValue.slice(spliceStart, selectionEndAfter)
+      // Find the end of the changed region
+      let oldEnd = oldPlainTextValue.length - 1
+      let newEnd = plainTextValue.length - 1
+      while (oldEnd >= spliceStart && newEnd >= spliceStart &&
+             oldPlainTextValue[oldEnd] === plainTextValue[newEnd]) {
+        oldEnd--
+        newEnd--
+      }
 
-      // find index of the unchanged remainder
-      spliceEnd = oldPlainTextValue.lastIndexOf(
-        plainTextValue.substring(selectionEndAfter)
-      )
+      // The changed region is from spliceStart to oldEnd+1 in oldPlainTextValue
+      // and should be replaced with the region from spliceStart to newEnd+1 in plainTextValue
+      insert = plainTextValue.slice(spliceStart, newEnd + 1)
+      spliceEnd = oldEnd + 1
 
       // re-map the corrected indices
       mappedSpliceStart = mapPlainTextIndex(value, config, spliceStart, 'START')
